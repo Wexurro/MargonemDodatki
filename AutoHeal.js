@@ -60,6 +60,7 @@ async function init() {
         labelHP.style.color = "white";
         labelHP.style.textAlign = "center";
         labelHP.style.pointerEvents = "none";
+        labelHP.style.textShadow = "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
         document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHP);
 
         updateHPLabel()
@@ -156,7 +157,7 @@ async function autoHeal() {
         amount = (healPercent[i]._cachedStats.perheal / 100) * maxHP;
 
         if (amount <= remainingHP) {
-            console.log("Procentowa mikstura leczy " + amount) + " - Używam jej";
+            console.log("Procentowa mikstura leczy " + amount + " - Używam jej");
             useItem(healPercent[i].id);
             return;
         }
