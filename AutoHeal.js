@@ -36,36 +36,31 @@ async function init() {
     window.API.addCallbackToEvent("close_battle", autoHeal);
 
     //Dodaj przycisk do leczenia na żądanie
-    if (!document.getElementById("autoheal-btn")) {
-        var btn = document.createElement("button");
-        btn.id = "autoheal-btn";
-        btn.innerText = '♥';
-        btn.style.width = "100%";
-        btn.style.backgroundColor = "transparent";
-        btn.style.border = "0px";
-        btn.style.bottom = "26px";
-        btn.style.position = "absolute";
-        btn.style.color = "white";
-        btn.style.fontWeight = "bold";
-        btn.style.fontSize = "1.3em";
-        btn.addEventListener("click", autoHeal);
-        document.getElementsByClassName("glass")[0].append(btn);
-    }
+    var btn = document.createElement("button");
+    btn.id = "autoheal-btn";
+    btn.innerText = '♥';
+    btn.style.width = "100%";
+    btn.style.backgroundColor = "transparent";
+    btn.style.border = "0px";
+    btn.style.bottom = "26px";
+    btn.style.position = "absolute";
+    btn.style.color = "white";
+    btn.style.fontWeight = "bold";
+    btn.style.fontSize = "1.3em";
+    btn.addEventListener("click", autoHeal);
+    document.getElementsByClassName("glass")[0].append(btn);
 
     if (settingsShowHP) {
-        if (!document.getElementById("autoheal-label")) {
-            labelHP = document.createElement("label");
-            labelHP.innerText = Engine.hero.d.warrior_stats.hp + " HP";
-            labelHP.id = "autoheal-label"
-            labelHP.style.width = "100%";
-            labelHP.style.top = "-14px";
-            labelHP.style.position = "absolute";
-            labelHP.style.color = "white";
-            labelHP.style.textAlign = "center";
-            document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHP);
-        } else {
-            labelHP = document.getElementById("autoheal-label");
-        }
+        labelHP = document.createElement("div");
+        labelHP.innerText = Engine.hero.d.warrior_stats.hp + " HP";
+        labelHP.id = "autoheal-label"
+        labelHP.style.width = "100%";
+        labelHP.style.top = "-14px";
+        labelHP.style.position = "absolute";
+        labelHP.style.color = "white";
+        labelHP.style.textAlign = "center";
+        labelHP.style.pointerEvents = "none";
+        document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHP);
 
         updateHPLabel()
     }
