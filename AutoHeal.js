@@ -7,6 +7,8 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=margonem.pl
 // @grant        none
 // ==/UserScript==
+// Firefox testowany i działa
+// Chrome testowany i działa
 
 async function waitForSeconds(time) {
     time *= 1000
@@ -24,6 +26,7 @@ var settingsNotUsePercentHP = false;
 var settingsShowHP = true;
 
 var lastHP = 0;
+var labelHP = null;
 
 async function init() {
     //Poczekaj 2 sekundy na załadowanie gry
@@ -35,6 +38,7 @@ async function init() {
     //Dodaj przycisk do leczenia na żądanie
     if (!document.getElementById("autoheal-btn")) {
         var btn = document.createElement("button");
+        btn.id = "autoheal-btn";
         btn.innerText = '♥';
         btn.style.width = "100%";
         btn.style.backgroundColor = "transparent";
@@ -48,7 +52,32 @@ async function init() {
         document.getElementsByClassName("glass")[0].append(btn);
     }
 
-    console.log("Autoheal Initialized");
+    if (settingsShowHP) {
+        if (!document.getElementById("autoheal-label")) {
+            labelHP = document.createElement("label");
+            labelHP.innerText = Engine.hero.d.warrior_stats.hp + " HP";
+            labelHP.id = "autoheal-label"
+            labelHP.style.width = "100%";
+            labelHP.style.top = "-14px";
+            labelHP.style.position = "absolute";
+            labelHP.style.color = "white";
+            labelHP.style.textAlign = "center";
+            document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHP);
+        } else {
+            labelHP = document.getElementById("autoheal-label");
+        }
+
+        updateHPLabel()
+    }
+
+    console.log("Autoheal uruchomiony");
+}
+
+async function updateHPLabel() {
+    while (true) {
+        labelHP.innerText = Engine.hero.d.warrior_stats.hp + " HP";
+        await waitForSeconds(0.5);
+    }
 }
 
 async function useItem(id) {
@@ -58,7 +87,7 @@ async function useItem(id) {
 }
 
 async function autoHeal() {
-    console.log("Autoheal");
+    console.log("Zaczynam leczenie...");
     //Pobierz dane o punktach życia postaci
     var currentHP = Engine.hero.d.warrior_stats.hp;
     var maxHP = Engine.hero.d.warrior_stats.maxhp;
