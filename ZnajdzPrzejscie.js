@@ -57,7 +57,7 @@ async function lookForExits() {
         //Sprawdzamy jakie są dostępne przejścia jeżeli są inne niż aktualne, oznacza to że zmieniliśmy mapke
         if (townnames != Engine.map.getGateways().townnames) {
             townnames = Engine.map.getGateways().townnames;
-            console.log(townnames);
+            //console.log(townnames);
 
             //Usuwamy stare przyciski
             const oldBtns = document.getElementsByClassName('town-button');
@@ -68,7 +68,7 @@ async function lookForExits() {
 
             //Dodajemy przyciski
             for (const [key, value] of Object.entries(townnames)) {
-                console.log(`${key}: ${value}`);
+                //console.log(`${key}: ${value}`);
 
                 var townBtn = document.createElement('button');
                 townBtn.innerText = value;
