@@ -141,6 +141,7 @@ async function autoHeal() {
     if (!settingsNotUsePercentHP) {
         healPercent = items
             .filter(item => item._cachedStats.hasOwnProperty("perheal"))
+            .filter(item => item._cachedStats.perheal > 0)
             .filter(item => !item._cachedStats.hasOwnProperty("lvl") || (item._cachedStats.hasOwnProperty("lvl") && item._cachedStats.lvl <= heroLevel))
             .filter(item => !item._cachedStats.hasOwnProperty("timelimit") || (item._cachedStats.hasOwnProperty("timelimit") && !item._cachedStats.timelimit.includes(",")))
             .sort(function(a, b) {
