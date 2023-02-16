@@ -7,7 +7,6 @@ Dodatek do automatycznego leczenia. Zużywa mikstury każdego typu (procentowe, 
 ![Obrazek](https://i.imgur.com/sTpO8Xj.png)
 
 # Znajdź przejście
-Dodatek który dodaje na górze ekranu wszystkie dostępne przejścia na mapie i po naciśnięciu przycisku kieruje tam naszego bohatera
-[Dostałem informacje że antybot może to wykryć jako bota - czekam na potwierdzenie]
+Dodatek który dodaje na górze ekranu wszystkie dostępne przejścia na mapie i po naciśnięciu przycisku kieruje tam naszego bohatera.
 
 ![Obrazek](https://i.imgur.com/Wud2ZYa.png)
