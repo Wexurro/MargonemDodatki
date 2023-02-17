@@ -71,7 +71,7 @@ async function init() {
 
 async function updateHPLabel() {
     while (true) {
-        labelHP.innerText = Engine.hero.d.warrior_stats.hp + " HP";
+        labelHP.innerText = parseInt(Engine.hero.d.warrior_stats.hp).toLocaleString() + " HP";
         await waitForSeconds(0.5);
     }
 }
@@ -95,8 +95,8 @@ async function autoHeal() {
     }
 
     while (lastHP == currentHP) {
-        console.log("Życie nie zaktualizowało się w obiekcie Engine czekam...");
-        await waitForSeconds(0.1);
+        console.log("Życie nie zaktualizowało się w obiekcie Engine...");
+        return;
     }
 
     lastHP = currentHP;
