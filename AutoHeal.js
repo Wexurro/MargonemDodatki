@@ -20,11 +20,15 @@ async function waitForSeconds(time) {
 }
 
 //Ustawienia
-var settingsNotUsePointHP = false;
-var settingsNotUseFullHP = false;
-var settingsNotUsePercentHP = false;
-var settingsShowHP = true;
+//Te ustawienia można edytować według własnych potrzeb
+var settingsNotUsePointHP = false; // Ustaw na 'true' żeby nie używać zwykłych potek
+var settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z pełnym leczeniem
+var settingsNotUsePercentHP = false; //Ustaw na 'true' żeby nie używać potem z procentowym leczeniem
+var settingsShowHP = true; //Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia
+var minimumHeal = 0; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100)
+//----------------------------------------------------------------
 
+//Zmienne wewnętrzne
 var lastHP = 0;
 var labelHP = null;
 
@@ -118,7 +122,7 @@ async function autoHeal() {
     if (!settingsNotUsePointHP) {
         healPoints = items
             .filter(item => item._cachedStats.hasOwnProperty("leczy"))
-            .filter(item => item._cachedStats.leczy > 0)
+            .filter(item => item._cachedStats.leczy > minimumHeal)
             .filter(item => !item._cachedStats.hasOwnProperty("lvl") || (item._cachedStats.hasOwnProperty("lvl") && item._cachedStats.lvl <= heroLevel))
             .filter(item => !item._cachedStats.hasOwnProperty("timelimit") || (item._cachedStats.hasOwnProperty("timelimit") && !item._cachedStats.timelimit.includes(",")))
             .sort(function(a, b) {
