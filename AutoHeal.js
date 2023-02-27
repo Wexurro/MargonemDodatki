@@ -25,7 +25,7 @@ var settingsNotUsePointHP = false; // Ustaw na 'true' żeby nie używać zwykły
 var settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z pełnym leczeniem
 var settingsNotUsePercentHP = false; //Ustaw na 'true' żeby nie używać potem z procentowym leczeniem
 var settingsShowHP = true; //Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia
-var minimumHeal = 0; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100)
+var minimumHeal = 100; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
 //----------------------------------------------------------------
 
 //Zmienne wewnętrzne
@@ -111,7 +111,6 @@ function updateHPLabel() {
 }
 
 async function showDamageGot() {
-    console.log("Show dmg got after close battle");
     var currentHP = Engine.hero.d.warrior_stats.hp;
     var maxHP = Engine.hero.d.warrior_stats.maxhp;
     var remainingHP = maxHP - currentHP;
@@ -152,7 +151,7 @@ async function autoHeal() {
         return;
     }
 
-    while (lastHP == currentHP) {
+    if (lastHP == currentHP) {
         console.log("Życie nie zaktualizowało się w obiekcie Engine...");
         return;
     }
