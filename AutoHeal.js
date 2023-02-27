@@ -86,14 +86,27 @@ async function init() {
         document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHP);
         document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHPDmg);
 
-        updateHPLabel()
+        updateHPLabel(Engine.hero.d.warrior_stats.hp);
     }
 
     console.log("Autoheal uruchomiony");
 }
 
-async function updateHPLabel() {
-    labelHP.innerText = parseInt(Engine.hero.d.warrior_stats.hp).toLocaleString() + " HP";
+function updateHPLabel(targetNum) {
+    const startNum = Number(labelHP.innerText.replace(' HP', ''));
+    const duration = 1000; // czas trwania w milisekundach
+    const range = targetNum - startNum;
+    const step = range / duration * 10; // 10ms delay
+
+    let currentNum = startNum;
+    const timer = setInterval(() => {
+        currentNum += step;
+        labelHP.innerText = parseInt(currentNum).toLocaleString() + ' HP';
+        if (currentNum >= targetNum) {
+            clearInterval(timer);
+            labelHP.innerText = parseInt(targetNum).toLocaleString() + ' HP';
+        }
+    }, 10);
 }
 
 async function showDamageGot() {
@@ -134,7 +147,7 @@ async function autoHeal() {
     //Jeżeli aktualne życie jest takie samo jak maksymalne nie ma potrzeby leczenia lub gdy nie żyjemy
     if (currentHP == maxHP || Engine.dead) {
         console.log("Życie pełne");
-        updateHPLabel();
+        updateHPLabel(currentHP);
         return;
     }
 
@@ -151,7 +164,7 @@ async function autoHeal() {
     console.log("Pozostało do uleczenia: " + remainingHP);
 
     if (settingsShowHP) {
-        updateHPLabel();
+        updateHPLabel(currentHP);
     }
 
     //Pobieramy EQ
@@ -208,7 +221,7 @@ async function autoHeal() {
         if (amount <= remainingHP) {
             console.log("Procentowa mikstura leczy " + amount + " - Używam jej");
             useItem(healPercent[i].id);
-            if (settingsShowHP) updateHPLabel();
+            if (settingsShowHP) updateHPLabel(currentHP);
             return;
         }
     }
@@ -220,7 +233,7 @@ async function autoHeal() {
         if (amount <= remainingHP) {
             console.log("Zwykła mikstura leczy " + amount + " - Używam jej");
             useItem(healPoints[i].id);
-            if (settingsShowHP) updateHPLabel();
+            if (settingsShowHP) updateHPLabel(currentHP);
             return;
         }
     }
@@ -230,7 +243,7 @@ async function autoHeal() {
         amount = healFull[0]._cachedStats.fullheal;
         console.log("Pełna mikstura leczy " + amount + " - Używam jej");
         useItem(healFull[0].id);
-        if (settingsShowHP) updateHPLabel();
+        if (settingsShowHP) updateHPLabel(currentHP);
         return;
     }
 }
