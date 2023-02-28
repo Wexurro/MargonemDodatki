@@ -25,7 +25,7 @@ var settingsNotUsePointHP = false; // Ustaw na 'true' żeby nie używać zwykły
 var settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z pełnym leczeniem
 var settingsNotUsePercentHP = false; //Ustaw na 'true' żeby nie używać potem z procentowym leczeniem
 var settingsShowHP = true; //Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia
-var minimumHeal = 100; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
+var minimumHeal = 1000; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
 //----------------------------------------------------------------
 
 //Zmienne wewnętrzne
@@ -94,7 +94,9 @@ async function init() {
 
 function updateHPLabel() {
     const targetNum = Engine.hero.d.warrior_stats.hp;
-    const startNum = Number(labelHP.innerText.replace(' HP', ''));
+    var num = labelHP.innerText.replaceAll(' HP', '');
+    num = num.replace(/\s/g, '');
+    const startNum = Number(num);
     const duration = 500; // czas trwania w milisekundach
     const range = targetNum - startNum;
     const step = range / duration * 10; // 10ms delay
