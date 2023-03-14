@@ -6,7 +6,7 @@ Dodatek do automatycznego leczenia. Zużywa mikstury każdego typu (procentowe, 
 
 ![Obrazek](https://i.imgur.com/sTpO8Xj.png)
 
-# Znajdź przejście
+# Znajdź przejście - Usunięty, podobno nie legalny
 Dodatek który dodaje na górze ekranu wszystkie dostępne przejścia na mapie i po naciśnięciu przycisku kieruje tam naszego bohatera.
 
 ![Obrazek](https://i.imgur.com/Wud2ZYa.png)
