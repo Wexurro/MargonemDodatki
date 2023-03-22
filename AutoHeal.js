@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Margonem AutoHeal
-// @version      1.0
-// @description  Skrypt na nowy interfejs do automatycznego uleczania po walce
+// @version      1.1
+// @description  Skrypt na nowy interfejs do automatycznego uleczania po walce https://forum.margonem.pl/?task=forum&show=posts&id=514978
 // @author       Wexurro
 // @match        https://*.margonem.pl/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=margonem.pl
@@ -10,128 +10,114 @@
 // Firefox testowany i działa
 // Chrome testowany i działa
 
-async function waitForSeconds(time) {
-    time *= 1000
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve();
-        }, time);
-    });
-}
-
 //Ustawienia
 //Te ustawienia można edytować według własnych potrzeb
-var settingsNotUsePointHP = false; // Ustaw na 'true' żeby nie używać zwykłych potek
-var settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z pełnym leczeniem
-var settingsNotUsePercentHP = false; //Ustaw na 'true' żeby nie używać potem z procentowym leczeniem
-var settingsShowHP = true; //Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia
-var minimumHeal = 1000; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
+let settingsNotUsePointHP = false; // Ustaw na 'true' żeby nie używać zwykłych potek
+let settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z pełnym leczeniem
+let settingsNotUsePercentHP = false; //Ustaw na 'true' żeby nie używać potem z procentowym leczeniem
+let settingsShowHP = true; //Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia
+let minimumHeal = 499; //Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
+let excludedItems = ["Sok z Gumijagód", "Wytrawny chrabąszcz"]; //Tu możesz wpisać nazwy przdmiotów których nie chcesz używać
 //----------------------------------------------------------------
 
 //Zmienne wewnętrzne
-var lastHP = 0;
-var labelHP = null;
-var labelHPDmg = null;
+let lastHP = 0;
+let labelHP = null;
+let labelHPDmg = null;
+
+const waitForSeconds = (time) => new Promise(resolve => setTimeout(resolve, time * 1000));
 
 async function init() {
-    //Poczekaj 2 sekundy na załadowanie gry
-    await waitForSeconds(2);
+    while (typeof Engine.hero === 'undefined')
+        await waitForSeconds(0.1);
 
-    //Uruchamiaj leczenie po zakończeniu walki
+    while (typeof Engine.hero.d.warrior_stats === 'undefined')
+        await waitForSeconds(0.1);
+
     window.API.addCallbackToEvent("close_battle", autoHeal);
 
-    if (settingsShowHP)
+    if (settingsShowHP) {
         window.API.addCallbackToEvent("close_battle", showDamageGot);
+    }
 
-    //Dodaj przycisk do leczenia na żądanie
-    var btn = document.createElement("button");
-    btn.id = "autoheal-btn";
-    btn.innerText = '♥';
-    btn.style.width = "100%";
-    btn.style.backgroundColor = "transparent";
-    btn.style.border = "0px";
-    btn.style.bottom = "26px";
-    btn.style.position = "absolute";
-    btn.style.color = "white";
-    btn.style.fontWeight = "bold";
-    btn.style.fontSize = "1.3em";
+    const btn = createButton("autoheal-btn", '♥', "100%", "transparent", "0px", "26px", "absolute", "white", "bold", "1.3em");
     btn.addEventListener("click", autoHeal);
-    document.getElementsByClassName("glass")[0].append(btn);
+    document.querySelector(".glass").append(btn);
 
     if (settingsShowHP) {
-        labelHP = document.createElement("div");
-        labelHP.innerText = Engine.hero.d.warrior_stats.hp + " HP";
-        labelHP.id = "autoheal-label"
-        labelHP.style.width = "100%";
-        labelHP.style.top = "-14px";
-        labelHP.style.position = "absolute";
-        labelHP.style.color = "white";
-        labelHP.style.textAlign = "center";
-        labelHP.style.pointerEvents = "none";
-        labelHP.style.textShadow = "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
-
-        labelHPDmg = document.createElement("div");
-        labelHPDmg.innerText = Engine.hero.d.warrior_stats.hp + " HP";
-        labelHPDmg.id = "autoheal-dmg-label"
-        labelHPDmg.style.width = "100%";
-        labelHPDmg.style.top = "-27px";
-        labelHPDmg.style.position = "absolute";
-        labelHPDmg.style.fontWeight = "bold";
-        labelHPDmg.style.textAlign = "center";
-        labelHPDmg.style.pointerEvents = "none";
-        labelHPDmg.style.textShadow = "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black";
-        labelHPDmg.style.opacity = '0';
-        labelHPDmg.style.transition = 'opacity 0.5s ease-in-out';
-
-        document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHP);
-        document.getElementsByClassName("glass")[0].parentElement.parentElement.append(labelHPDmg);
-
+        labelHP = createLabel("autoheal-label", Engine.hero.d.warrior_stats.hp + " HP", "100%", "-14px", "absolute", "white", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black");
+        labelHPDmg = createLabel("autoheal-dmg-label", Engine.hero.d.warrior_stats.hp + " HP", "100%", "-27px", "absolute", "bold", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black", "0", "opacity 0.5s ease-in-out");
+        document.querySelector(".glass").parentElement.parentElement.append(labelHP, labelHPDmg);
         updateHPLabel();
     }
 
     console.log("Autoheal uruchomiony");
 }
 
+function createButton(id, text, width, backgroundColor, border, bottom, position, color, fontWeight, fontSize) {
+    const btn = document.createElement("button");
+    btn.id = id;
+    btn.innerText = text;
+    btn.style.width = width;
+    btn.style.backgroundColor = backgroundColor;
+    btn.style.border = border;
+    btn.style.bottom = bottom;
+    btn.style.position = position;
+    btn.style.color = color;
+    btn.style.fontWeight = fontWeight;
+    btn.style.fontSize = fontSize;
+    return btn;
+}
+
+function createLabel(id, text, width, top, position, color, textAlign, pointerEvents, textShadow, opacity = '', transition = '') {
+    const label = document.createElement("div");
+    label.innerText = text;
+    label.id = id;
+    label.style.width = width;
+    label.style.top = top;
+    label.style.position = position;
+    label.style.color = color;
+    label.style.textAlign = textAlign;
+    label.style.pointerEvents = pointerEvents;
+    label.style.textShadow = textShadow;
+    label.style.opacity = opacity;
+    label.style.transition = transition;
+    return label;
+}
+
 function updateHPLabel() {
     const targetNum = Engine.hero.d.warrior_stats.hp;
-    var num = labelHP.innerText.replaceAll(' HP', '');
-    num = num.replace(/\s/g, '');
-    const startNum = Number(num);
-    const duration = 500; // czas trwania w milisekundach
-    const range = targetNum - startNum;
-    const step = range / duration * 10; // 10ms delay
+    let currentNum = parseInt(labelHP.innerText.replaceAll(' HP', '').replace(/\s/g, ''));
+    const range = targetNum - currentNum;
+    const step = range / 50; // 500ms duration with 10ms delay
 
-    let currentNum = startNum;
     const timer = setInterval(() => {
         currentNum += step;
-        labelHP.innerText = parseInt(currentNum).toLocaleString() + ' HP';
+        labelHP.innerText = `${parseInt(currentNum).toLocaleString()} HP`;
         if (currentNum >= targetNum) {
             clearInterval(timer);
-            labelHP.innerText = parseInt(targetNum).toLocaleString() + ' HP';
+            labelHP.innerText = `${parseInt(targetNum).toLocaleString()} HP`;
         }
     }, 10);
 }
 
 async function showDamageGot() {
-    var currentHP = Engine.hero.d.warrior_stats.hp;
-    var maxHP = Engine.hero.d.warrior_stats.maxhp;
-    var remainingHP = maxHP - currentHP;
+    const { warrior_stats: { hp, maxhp } } = Engine.hero.d;
+    const remainingHP = maxhp - hp;
 
-    if (remainingHP != 0) {
-        //Liczymy ile procent obrażeń odnieśliśmy
-        var dmgPercent = (remainingHP / maxHP * 100).toFixed(1);
+    if (remainingHP === 0) return;
 
-        labelHPDmg.innerText = '-' + dmgPercent + '%';
+    const dmgPercent = ((remainingHP / maxhp) * 100).toFixed(1);
+    const hue = (1 - dmgPercent / 100) * 60;
+    const color = `hsl(${hue}, 100%, 50%)`;
 
-        var hue = (1 - dmgPercent / 100) * 60; // Przeliczenie procentowej wartości na kąt barwy w modelu HSL
-        var color = 'hsl(' + hue + ', 100%, 50%)'; // Tworzenie ciągu znaków reprezentującego kolor w modelu HSL
+    labelHPDmg.innerText = `-${dmgPercent}%`;
+    labelHPDmg.style.color = color;
+    labelHPDmg.style.opacity = '1';
 
-        labelHPDmg.style.color = color;
+    await waitForSeconds(2);
 
-        labelHPDmg.style.opacity = '1';
-        await waitForSeconds(2);
-        labelHPDmg.style.opacity = '0';
-    }
+    labelHPDmg.style.opacity = '0';
 }
 
 async function useItem(id) {
@@ -184,6 +170,7 @@ async function autoHeal() {
             .filter(item => item._cachedStats.leczy > minimumHeal)
             .filter(item => !item._cachedStats.hasOwnProperty("lvl") || (item._cachedStats.hasOwnProperty("lvl") && item._cachedStats.lvl <= heroLevel))
             .filter(item => !item._cachedStats.hasOwnProperty("timelimit") || (item._cachedStats.hasOwnProperty("timelimit") && !item._cachedStats.timelimit.includes(",")))
+            .filter(item => !excludedItems.includes(item.name))
             .sort(function(a, b) {
                 return b._cachedStats.leczy - a._cachedStats.leczy;
             });
@@ -195,6 +182,7 @@ async function autoHeal() {
             .filter(item => item._cachedStats.hasOwnProperty("fullheal"))
             .filter(item => !item._cachedStats.hasOwnProperty("lvl") || (item._cachedStats.hasOwnProperty("lvl") && item._cachedStats.lvl <= heroLevel))
             .filter(item => !item._cachedStats.hasOwnProperty("timelimit") || (item._cachedStats.hasOwnProperty("timelimit") && !item._cachedStats.timelimit.includes(",")))
+            .filter(item => !excludedItems.includes(item.name))
             .sort(function(a, b) {
                 return a._cachedStats.fullheal - b._cachedStats.fullheal;
             });
@@ -207,6 +195,7 @@ async function autoHeal() {
             .filter(item => item._cachedStats.perheal > 0)
             .filter(item => !item._cachedStats.hasOwnProperty("lvl") || (item._cachedStats.hasOwnProperty("lvl") && item._cachedStats.lvl <= heroLevel))
             .filter(item => !item._cachedStats.hasOwnProperty("timelimit") || (item._cachedStats.hasOwnProperty("timelimit") && !item._cachedStats.timelimit.includes(",")))
+            .filter(item => !excludedItems.includes(item.name))
             .sort(function(a, b) {
                 return b._cachedStats.perheal - a._cachedStats.perheal;
             });
@@ -221,7 +210,7 @@ async function autoHeal() {
         amount = (healPercent[i]._cachedStats.perheal / 100) * maxHP;
 
         if (amount <= remainingHP) {
-            console.log("Procentowa mikstura leczy " + amount + " - Używam jej");
+            console.log("Procentowa mikstura " + healPercent[i].name + " leczy " + amount + " - Używam jej");
             useItem(healPercent[i].id);
             if (settingsShowHP) updateHPLabel();
             return;
@@ -233,7 +222,7 @@ async function autoHeal() {
         amount = healPoints[i]._cachedStats.leczy;
 
         if (amount <= remainingHP) {
-            console.log("Zwykła mikstura leczy " + amount + " - Używam jej");
+            console.log("Zwykła mikstura " + healPoints[i].name + " leczy " + amount + " - Używam jej");
             useItem(healPoints[i].id);
             if (settingsShowHP) updateHPLabel();
             return;
@@ -243,7 +232,7 @@ async function autoHeal() {
     //Jeżeli nadal pozostaje coś do wyleczenia, używamy pełnego leczenia
     if (healFull.length > 0) {
         amount = healFull[0]._cachedStats.fullheal;
-        console.log("Pełna mikstura leczy " + amount + " - Używam jej");
+        console.log("Pełna mikstura " + healFull[0].name + " leczy " + amount + " - Używam jej");
         useItem(healFull[0].id);
         if (settingsShowHP) updateHPLabel();
         return;
