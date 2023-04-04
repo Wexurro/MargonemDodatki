@@ -87,7 +87,7 @@ function createLabel(id, text, width, top, position, color, textAlign, pointerEv
 
 function updateHPLabel() {
     const targetNum = Engine.hero.d.warrior_stats.hp;
-    let currentNum = parseInt(labelHP.innerText.replaceAll(' HP', '').replace(/\s/g, ''));
+    let currentNum = parseInt(labelHP.innerText.replaceAll(' HP', '').replace(/\s/g, '').replace('.','').replace(',',''));
     const range = targetNum - currentNum;
     const step = range / 50; // 500ms duration with 10ms delay
 
