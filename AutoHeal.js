@@ -128,11 +128,17 @@ async function calculateHpLeftToHeal() {
 
     // Sumujemy leczenia dla informacji na ekranie
     for (i = 0; i < healPercent.length; i++) {
-        healLeft += Number((healPercent[i]._cachedStats.perheal / 100) * maxHP) * healPercent[i]._cachedStats.amount;
+        if (typeof healPercent[i]._cachedStats.amount != "undefined")
+            healLeft += Number((healPercent[i]._cachedStats.perheal / 100) * maxHP) * healPercent[i]._cachedStats.amount;
+        else
+            healLeft += Number((healPercent[i]._cachedStats.perheal / 100) * maxHP);
     }
 
     for (i = 0; i < healPoints.length; i++) {
-        healLeft += Number(healPoints[i]._cachedStats.leczy) * healPoints[i]._cachedStats.amount;
+        if (typeof healPoints[i]._cachedStats.amount != "undefined")
+            healLeft += Number(healPoints[i]._cachedStats.leczy) * healPoints[i]._cachedStats.amount;
+        else
+            healLeft += Number(healPoints[i]._cachedStats.leczy);
     }
 
     for (i = 0; i < healFull.length; i++) {
@@ -223,6 +229,9 @@ async function showDamageGot(remainingHP) {
     var maxHP = Engine.hero.d.warrior_stats.maxhp;
 
     var percentLost = ((remainingHP / maxHP) * 100).toFixed(1);
+
+    if (percentLost < 0)
+        percentLost *= -1;
 
     const hue = (1 - percentLost / 100) * 60;
     const color = `hsl(${hue}, 100%, 50%)`;
