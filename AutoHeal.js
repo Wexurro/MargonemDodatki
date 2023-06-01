@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Margonem AutoHeal
-// @version      1.2
+// @version      1.3
 // @description  Skrypt na nowy interfejs do automatycznego uleczania po walce https://forum.margonem.pl/?task=forum&show=posts&id=514978
 // @author       Wexurro
 // @match        https://*.margonem.pl/
@@ -17,6 +17,7 @@ let settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z 
 let settingsNotUsePercentHP = false; // Ustaw na 'true' żeby nie używać potek z procentowym leczeniem
 let settingsShowHP = true; // Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia oraz pozostałego leczenia
 let minimumHeal = 499; // Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
+let minimumLifeToHealPercent = 100; // Ustaw minimalną procentową wartość przy której skrypt zacznie działać, 80 - ulecz jak mam mniej niż 80% zdrowia, 50 - ulecz jak mam mniej niż 50% zdrowia itd.
 let excludedItems = ["Sok z Gumijagód", "Wytrawny chrabąszcz"]; // Tu możesz wpisać nazwy przdmiotów których nie chcesz używać
 //----------------------- KONIEC USTAWIEŃ -----------------------------------------
 
@@ -25,7 +26,6 @@ let labelHP = null;
 let labelHPDmg = null;
 let labelHPHealLeft = null;
 let healLeft = 0;
-let showDmg = true;
 let lastRemainingHP = 0;
 
 const waitForSeconds = (time) => new Promise(resolve => setTimeout(resolve, time * 1000));
@@ -37,10 +37,10 @@ async function init() {
     while (typeof Engine.hero.d.warrior_stats === 'undefined')
         await waitForSeconds(0.1);
 
-    window.API.addCallbackToEvent("close_battle", autoHeal);
+    window.API.addCallbackToEvent("close_battle", initAutoHeal);
 
     const btn = createButton("autoheal-btn", '♥', "100%", "transparent", "0px", "26px", "absolute", "white", "bold", "1.3em");
-    btn.addEventListener("click", autoHeal);
+    btn.addEventListener("click", initAutoHeal);
     document.querySelector(".glass").append(btn);
 
     if (settingsShowHP) {
@@ -49,9 +49,11 @@ async function init() {
         labelHPHealLeft = createLabel("autoheal-healleft-label", "[Not Calculated]", "100%", "-28px", "absolute", "white", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black");
         labelHPHealLeft.style.fontSize = "10px";
         document.querySelector(".glass").parentElement.parentElement.append(labelHP, labelHPHealLeft, labelHPDmg);
-    }
+        var currentHP = Engine.hero.d.warrior_stats.hp;
+        var maxHP = Engine.hero.d.warrior_stats.maxhp;
+        var remainingHP = maxHP - currentHP;
+        lastRemainingHP = remainingHP;
 
-    if (settingsShowHP) {
         updateHPLabel();
         updateHealLeftLabel();
         calculateHpLeftToHeal()
@@ -122,6 +124,7 @@ async function calculateHpLeftToHeal() {
     var healPoints = arrays[0];
     var healFull = arrays[1];
     var healPercent = arrays[2];
+    var maxHP = Engine.hero.d.warrior_stats.maxhp;
 
     var i = 0;
     healLeft = 0;
@@ -145,7 +148,8 @@ async function calculateHpLeftToHeal() {
         healLeft += Number(healFull[i]._cachedStats.fullheal);
     }
 
-    updateHealLeftLabel();
+    if (settingsShowHP)
+        updateHealLeftLabel();
 }
 
 function createButton(id, text, width, backgroundColor, border, bottom, position, color, fontWeight, fontSize) {
@@ -220,36 +224,47 @@ function updateHealLeftLabel() {
 
 }
 
-async function showDamageGot(remainingHP) {
-    if (remainingHP == 0) {
-        showDmg = true;
-        return;
+async function showDamageGot(dmgTaken) {
+    if (dmgTaken != 0) {
+        var maxHP = Engine.hero.d.warrior_stats.maxhp;
+
+        var percentLost = ((dmgTaken / maxHP) * 100).toFixed(1);
+
+        const hue = (1 - percentLost / 100) * 60;
+        const color = `hsl(${hue}, 100%, 50%)`;
+
+        labelHPDmg.innerText = `-${percentLost}%`;
+        labelHPDmg.style.color = color;
+        labelHPDmg.style.opacity = '1';
+
+        await waitForSeconds(2);
+
+        labelHPDmg.style.opacity = '0';
     }
-
-    var maxHP = Engine.hero.d.warrior_stats.maxhp;
-
-    var percentLost = ((remainingHP / maxHP) * 100).toFixed(1);
-
-    if (percentLost < 0)
-        percentLost *= -1;
-
-    const hue = (1 - percentLost / 100) * 60;
-    const color = `hsl(${hue}, 100%, 50%)`;
-
-    labelHPDmg.innerText = `-${percentLost}%`;
-    labelHPDmg.style.color = color;
-    labelHPDmg.style.opacity = '1';
-
-    await waitForSeconds(2);
-
-    labelHPDmg.style.opacity = '0';
-    showDmg = true;
 }
 
-async function useItem(id) {
-    window._g(`moveitem&st=1&id=${id}`, () => {
-        setTimeout(autoHeal, 100);
-    });
+async function initAutoHeal() {
+    console.log('AutoHeal aktywowany');
+
+    var currentHP = Engine.hero.d.warrior_stats.hp;
+    var maxHP = Engine.hero.d.warrior_stats.maxhp;
+    var remainingHP = maxHP - currentHP;
+    var propRemaining = remainingHP - lastRemainingHP;
+    lastRemainingHP = remainingHP;
+
+    if (propRemaining < 0) {
+        propRemaining = 0;
+    }
+
+    if (settingsShowHP) {
+        showDamageGot(propRemaining);
+    }
+
+    if (currentHP <= (maxHP * (minimumLifeToHealPercent / 100))) {
+        autoHeal();
+    } else {
+        console.log('Życie nie spadło poniżej zadeklarowanej procentowej wartości (' + minimumLifeToHealPercent + '%)')
+    }
 }
 
 async function autoHeal() {
@@ -259,7 +274,8 @@ async function autoHeal() {
     var currentHP = Engine.hero.d.warrior_stats.hp;
     var maxHP = Engine.hero.d.warrior_stats.maxhp;
 
-    calculateHpLeftToHeal();
+    if (settingsShowHP)
+        calculateHpLeftToHeal();
 
     // Jeżeli aktualne życie jest takie samo jak maksymalne nie ma potrzeby leczenia lub gdy nie żyjemy
     if (currentHP == maxHP || Engine.dead) {
@@ -270,14 +286,6 @@ async function autoHeal() {
     // Liczymy ile HP jest do wyleczenia
     var remainingHP = maxHP - currentHP;
     console.log("Pozostało do uleczenia: " + remainingHP);
-
-    var propRemaining = remainingHP - lastRemainingHP;
-    lastRemainingHP = remainingHP;
-
-    if (settingsShowHP && showDmg) {
-        showDmg = false;
-        showDamageGot(propRemaining);
-    }
 
     const arrays = await getItems();
 
@@ -295,7 +303,16 @@ async function autoHeal() {
 
         if (amount <= remainingHP) {
             console.log("Procentowa mikstura " + healPercent[i].name + " leczy " + amount + " - Używam jej");
-            useItem(healPercent[i].id);
+            window._g(`moveitem&st=1&id=${healPercent[i].id}`);
+            await waitForSeconds(0.25);
+            // Pobierz dane o punktach życia postaci
+            currentHP = Engine.hero.d.warrior_stats.hp;
+
+            if (currentHP <= maxHP || !Engine.dead) {
+                console.log("Życie nie jest pełne, kontynuuje leczenie");
+                autoHeal();
+            }
+
             return;
         }
     }
@@ -306,7 +323,17 @@ async function autoHeal() {
 
         if (amount <= remainingHP) {
             console.log("Zwykła mikstura " + healPoints[i].name + " leczy " + amount + " - Używam jej");
-            useItem(healPoints[i].id);
+            //useItem(healPoints[i].id);
+            window._g(`moveitem&st=1&id=${healPoints[i].id}`);
+            await waitForSeconds(0.25);
+
+            // Pobierz dane o punktach życia postaci
+            currentHP = Engine.hero.d.warrior_stats.hp;
+
+            if (currentHP <= maxHP || !Engine.dead) {
+                console.log("Życie nie jest pełne, kontynuuje leczenie");
+                autoHeal();
+            }
             return;
         }
     }
@@ -315,7 +342,17 @@ async function autoHeal() {
     if (healFull.length > 0) {
         amount = healFull[0]._cachedStats.fullheal;
         console.log("Pełna mikstura " + healFull[0].name + " leczy " + amount + " - Używam jej");
-        useItem(healFull[0].id);
+        //useItem(healFull[0].id);
+        window._g(`moveitem&st=1&id=${healFull[0].id}`);
+        await waitForSeconds(0.25);
+
+        // Pobierz dane o punktach życia postaci
+        currentHP = Engine.hero.d.warrior_stats.hp;
+
+        if (currentHP <= maxHP || !Engine.dead) {
+            console.log("Życie nie jest pełne, kontynuuje leczenie");
+            autoHeal();
+        }
         return;
     }
 }
