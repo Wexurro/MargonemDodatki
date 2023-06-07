@@ -78,7 +78,6 @@ async function questListListener() {
                         duplicatedButton.name = 'off'
                         duplicatedButton.style.transform = 'rotate(90deg)';
                         duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
-
                         let questSolution = savedQuestsList[j].parentElement.innerHTML;
 
                         duplicatedButton.addEventListener('click', function() {
@@ -96,6 +95,7 @@ async function questListListener() {
                     }
                 }
             }
+            await waitForSeconds(0.01);
         }
         await waitForSeconds(1);
     }
