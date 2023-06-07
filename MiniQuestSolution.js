@@ -39,15 +39,18 @@ async function questListListener() {
     let questWindowWrapper = document.createElement("div");
     questWindowWrapper.id = 'quest-window-wrapper';
     questWindowWrapper.name = '';
-    questWindowWrapper.style.width = "236px";
-    questWindowWrapper.style.height = "797px";
+    questWindowWrapper.style.width = "400px";
+    questWindowWrapper.style.height = "auto";
+    questWindowWrapper.style.maxHeight = '544px';
     questWindowWrapper.style.position = "absolute";
     questWindowWrapper.style.top = "0px";
-    questWindowWrapper.style.left = "354px";
-    questWindowWrapper.style.border = "1px solid black";
-    questWindowWrapper.style.background = "url(../img/gui/quests/quest_details.png?v=1686032121832)";
-    questWindowWrapper.style.backgroundSize = "contain";
+    questWindowWrapper.style.left = "360px";
+    questWindowWrapper.style.borderStyle = "solid";
+    questWindowWrapper.style.borderWidth = "34px 20px";
+    questWindowWrapper.style.borderImage = "url(../img/gui/window-frame.png?v=1686032121832) 34 20 fill repeat";
+    questWindowWrapper.style.backgroundSize = "100% 100%";
     questWindowWrapper.style.overflowY = "scroll";
+    questWindowWrapper.style.overflowX = "hidden";
     questWindowWrapper.style.opacity = "0";
     questWindowWrapper.style.transition = 'opacity 0.3s';
     document.getElementsByClassName("quest-log")[0].parentElement.parentElement.parentElement.appendChild(questWindowWrapper);
@@ -55,7 +58,7 @@ async function questListListener() {
     let questWindow = document.createElement("div");
     questWindow.id = 'quest-window';
     questWindow.style.padding = '10px';
-    questWindow.style.color = '#f0eade';
+    questWindow.style.background = 'url(../img/gui/content-redleather.jpg?v=1686032121832)';
     questWindowWrapper.appendChild(questWindow);
 
     while (true) {
