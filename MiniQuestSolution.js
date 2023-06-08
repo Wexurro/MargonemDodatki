@@ -80,14 +80,17 @@ async function questListListener() {
                         duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
                         let questSolution = savedQuestsList[j].parentElement.innerHTML;
 
-                        duplicatedButton.addEventListener('click', function() {
+                        duplicatedButton.addEventListener('click', async function() {
                             if (document.getElementById('quest-window-wrapper').name != questName) {
+                                document.getElementById('quest-window-wrapper').style.display = 'block';
                                 document.getElementById('quest-window-wrapper').name = questName;
                                 document.getElementById('quest-window').innerHTML = questSolution;
                                 document.getElementById('quest-window-wrapper').style.opacity = '1';
                             } else {
                                 document.getElementById('quest-window-wrapper').name = '';
                                 document.getElementById('quest-window-wrapper').style.opacity = '0';
+                                await waitForSeconds(0.3);
+                                document.getElementById('quest-window-wrapper').style.display = 'none';
                             }
 
                         })
