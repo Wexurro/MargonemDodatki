@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MiniQuesty
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  Skrypt pokazujący solucje questów w okienku obok listy zadań.
 // @author       Wexurro
 // @match        https://*.margonem.pl/
@@ -59,44 +59,54 @@ async function questListListener() {
     questWindow.style.background = 'url(../img/gui/content-redleather.jpg?v=1686032121832)';
     questWindowWrapper.appendChild(questWindow);
 
-    while (true) {
-        let activeQuestList = document.getElementsByClassName('quest-title')
+    const divElement = document.getElementById("quest-window-wrapper").parentElement;
+    const observer = new MutationObserver(callback);
 
-        for (let i = 0; i < activeQuestList.length; i++) {
-            let questName = activeQuestList[i].innerText.replace('.', '');
-            let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
+    function callback(mutationsList, observer) {
+        for (let mutation of mutationsList) {
+            if (mutation.type === 'childList') {
+                let activeQuestList = document.getElementsByClassName('quest-title')
 
-            quests.forEach(quest => {
-                if (quest.name.includes(questName)) {
-                    if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
-                        let duplicatedButton = questButton.cloneNode(true);
-                        duplicatedButton.classList.add('solution');
-                        duplicatedButton.removeAttribute('tip-id');
-                        duplicatedButton.style.transform = 'rotate(90deg)';
-                        duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
-                        let questSolution = quest.name + ' ' + quest.solution;
+                for (let i = 0; i < activeQuestList.length; i++) {
+                    let questName = activeQuestList[i].innerText.replace('.', '');
+                    let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
 
-                        duplicatedButton.addEventListener('click', async function() {
-                            if (document.getElementById('quest-window-wrapper').name != questName) {
-                                document.getElementById('quest-window-wrapper').style.display = 'block';
-                                document.getElementById('quest-window-wrapper').name = questName;
-                                document.getElementById('quest-window').innerHTML = questSolution;
-                                document.getElementById('quest-window-wrapper').style.opacity = '1';
-                            } else {
-                                document.getElementById('quest-window-wrapper').name = '';
-                                document.getElementById('quest-window-wrapper').style.opacity = '0';
-                                await waitForSeconds(0.3);
-                                document.getElementById('quest-window-wrapper').style.display = 'none';
+                    quests.forEach(quest => {
+                        if (quest.name.includes(questName)) {
+                            if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
+                                let duplicatedButton = questButton.cloneNode(true);
+                                duplicatedButton.classList.add('solution');
+                                duplicatedButton.removeAttribute('tip-id');
+                                duplicatedButton.style.transform = 'rotate(90deg)';
+                                duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
+                                let questSolution = quest.name + ' ' + quest.solution;
+
+                                duplicatedButton.addEventListener('click', async function() {
+                                    if (document.getElementById('quest-window-wrapper').name != questName) {
+                                        document.getElementById('quest-window-wrapper').style.display = 'block';
+                                        document.getElementById('quest-window-wrapper').name = questName;
+                                        document.getElementById('quest-window').innerHTML = questSolution;
+                                        document.getElementById('quest-window-wrapper').style.opacity = '1';
+                                    } else {
+                                        document.getElementById('quest-window-wrapper').name = '';
+                                        document.getElementById('quest-window-wrapper').style.opacity = '0';
+                                        await waitForSeconds(0.3);
+                                        document.getElementById('quest-window-wrapper').style.display = 'none';
+                                    }
+
+                                })
+                                activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
                             }
-
-                        })
-                        activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
-                    }
+                        }
+                    });
                 }
-            });
+            }
         }
-        await waitForSeconds(1);
     }
+
+    const config = { childList: true, subtree: true };
+    callback([{ type: 'childList', target: divElement }], observer);
+    observer.observe(divElement, config);
 }
 
 init();
