@@ -34,8 +34,6 @@ async function questListListener() {
     while (typeof document.getElementsByClassName("quest-log")[0] == 'undefined')
         await waitForSeconds(0.1);
 
-    let savedQuestsList = document.getElementsByTagName('quest-title');
-
     let questWindowWrapper = document.createElement("div");
     questWindowWrapper.id = 'quest-window-wrapper';
     questWindowWrapper.name = '';
@@ -61,45 +59,43 @@ async function questListListener() {
     questWindow.style.background = 'url(../img/gui/content-redleather.jpg?v=1686032121832)';
     questWindowWrapper.appendChild(questWindow);
 
-    //while (true) {
-    // Bierzemy aktywne questy
-    let activeQuestList = document.getElementsByClassName('quest-title')
+    while (true) {
+        let activeQuestList = document.getElementsByClassName('quest-title')
 
-    // Sprawdzamy po kolei po tytule
-    for (let i = 0; i < activeQuestList.length; i++) {
-        // Tworzymy nazwe aktywnego questa i przycisk do otwierania solucji
-        let questName = activeQuestList[i].innerText.replace('.', '');
-        let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
+        for (let i = 0; i < activeQuestList.length; i++) {
+            let questName = activeQuestList[i].innerText.replace('.', '');
+            let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
 
-        // Sprawdzamy jsona z questami
-        quests.forEach(quest => {
-            if (quest.name.includes(questName)) {
-                if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
-                    let duplicatedButton = questButton.cloneNode(true);
-                    duplicatedButton.classList.add('solution');
-                    duplicatedButton.removeAttribute('tip-id');
-                    duplicatedButton.style.transform = 'rotate(90deg)';
-                    duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
-                    let questSolution = quest.name + ' ' + quest.solution;
+            quests.forEach(quest => {
+                if (quest.name.includes(questName)) {
+                    if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
+                        let duplicatedButton = questButton.cloneNode(true);
+                        duplicatedButton.classList.add('solution');
+                        duplicatedButton.removeAttribute('tip-id');
+                        duplicatedButton.style.transform = 'rotate(90deg)';
+                        duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
+                        let questSolution = quest.name + ' ' + quest.solution;
 
-                    duplicatedButton.addEventListener('click', async function() {
-                        if (document.getElementById('quest-window-wrapper').name != questName) {
-                            document.getElementById('quest-window-wrapper').style.display = 'block';
-                            document.getElementById('quest-window-wrapper').name = questName;
-                            document.getElementById('quest-window').innerHTML = questSolution;
-                            document.getElementById('quest-window-wrapper').style.opacity = '1';
-                        } else {
-                            document.getElementById('quest-window-wrapper').name = '';
-                            document.getElementById('quest-window-wrapper').style.opacity = '0';
-                            await waitForSeconds(0.3);
-                            document.getElementById('quest-window-wrapper').style.display = 'none';
-                        }
+                        duplicatedButton.addEventListener('click', async function() {
+                            if (document.getElementById('quest-window-wrapper').name != questName) {
+                                document.getElementById('quest-window-wrapper').style.display = 'block';
+                                document.getElementById('quest-window-wrapper').name = questName;
+                                document.getElementById('quest-window').innerHTML = questSolution;
+                                document.getElementById('quest-window-wrapper').style.opacity = '1';
+                            } else {
+                                document.getElementById('quest-window-wrapper').name = '';
+                                document.getElementById('quest-window-wrapper').style.opacity = '0';
+                                await waitForSeconds(0.3);
+                                document.getElementById('quest-window-wrapper').style.display = 'none';
+                            }
 
-                    })
-                    activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
+                        })
+                        activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
+                    }
                 }
-            }
-        });
+            });
+        }
+        await waitForSeconds(1);
     }
 }
 
