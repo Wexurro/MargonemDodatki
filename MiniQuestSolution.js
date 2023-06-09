@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MiniQuesty
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  try to take over the world!
 // @author       You
 // @match        https://*.margonem.pl/
@@ -11,16 +11,16 @@
 
 const waitForSeconds = (time) => new Promise(resolve => setTimeout(resolve, time * 1000));
 
+let quests;
+
 function init() {
     console.log("MiniQuesty");
-    fetch('https://raw.githubusercontent.com/Wexurro/MargonemDodatki/main/quest-data.html')
+    fetch('https://raw.githubusercontent.com/Wexurro/MargonemDodatki/main/quests.json')
         .then(response => response.text())
         .then(content => {
-            let questContent = document.createElement("div");
-            questContent.id = "quest-content";
-            questContent.innerHTML = content;
-            document.body.appendChild(questContent);
-
+            const jsonObject = JSON.parse(content);
+            quests = jsonObject.quests;
+            console.log(quests);
             questListListener();
         })
         .catch(error => {
@@ -61,46 +61,45 @@ async function questListListener() {
     questWindow.style.background = 'url(../img/gui/content-redleather.jpg?v=1686032121832)';
     questWindowWrapper.appendChild(questWindow);
 
-    while (true) {
-        let activeQuestList = document.getElementsByClassName('quest-title')
+    //while (true) {
+    // Bierzemy aktywne questy
+    let activeQuestList = document.getElementsByClassName('quest-title')
 
-        for (let i = 0; i < activeQuestList.length; i++) {
-            let questName = activeQuestList[i].innerText.replace('.', '');
-            let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
+    // Sprawdzamy po kolei po tytule
+    for (let i = 0; i < activeQuestList.length; i++) {
+        // Tworzymy nazwe aktywnego questa i przycisk do otwierania solucji
+        let questName = activeQuestList[i].innerText.replace('.', '');
+        let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
 
-            for (let j = 0; j < savedQuestsList.length; j++) {
-                if (savedQuestsList[j].innerText.includes(questName)) {
+        // Sprawdzamy jsona z questami
+        quests.forEach(quest => {
+            if (quest.name.includes(questName)) {
+                if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
+                    let duplicatedButton = questButton.cloneNode(true);
+                    duplicatedButton.classList.add('solution');
+                    duplicatedButton.removeAttribute('tip-id');
+                    duplicatedButton.style.transform = 'rotate(90deg)';
+                    duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
+                    let questSolution = quest.name + ' ' + quest.solution;
 
-                    if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
-                        let duplicatedButton = questButton.cloneNode(true);
-                        duplicatedButton.classList.add('solution');
-                        duplicatedButton.removeAttribute('tip-id');
-                        duplicatedButton.name = 'off'
-                        duplicatedButton.style.transform = 'rotate(90deg)';
-                        duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
-                        let questSolution = savedQuestsList[j].parentElement.innerHTML;
+                    duplicatedButton.addEventListener('click', async function() {
+                        if (document.getElementById('quest-window-wrapper').name != questName) {
+                            document.getElementById('quest-window-wrapper').style.display = 'block';
+                            document.getElementById('quest-window-wrapper').name = questName;
+                            document.getElementById('quest-window').innerHTML = questSolution;
+                            document.getElementById('quest-window-wrapper').style.opacity = '1';
+                        } else {
+                            document.getElementById('quest-window-wrapper').name = '';
+                            document.getElementById('quest-window-wrapper').style.opacity = '0';
+                            await waitForSeconds(0.3);
+                            document.getElementById('quest-window-wrapper').style.display = 'none';
+                        }
 
-                        duplicatedButton.addEventListener('click', async function() {
-                            if (document.getElementById('quest-window-wrapper').name != questName) {
-                                document.getElementById('quest-window-wrapper').style.display = 'block';
-                                document.getElementById('quest-window-wrapper').name = questName;
-                                document.getElementById('quest-window').innerHTML = questSolution;
-                                document.getElementById('quest-window-wrapper').style.opacity = '1';
-                            } else {
-                                document.getElementById('quest-window-wrapper').name = '';
-                                document.getElementById('quest-window-wrapper').style.opacity = '0';
-                                await waitForSeconds(0.3);
-                                document.getElementById('quest-window-wrapper').style.display = 'none';
-                            }
-
-                        })
-                        activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
-                    }
+                    })
+                    activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
                 }
             }
-            await waitForSeconds(0.01);
-        }
-        await waitForSeconds(1);
+        });
     }
 }
 
