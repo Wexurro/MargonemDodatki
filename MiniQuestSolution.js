@@ -2,7 +2,7 @@
 // @name         MiniQuesty
 // @namespace    http://tampermonkey.net/
 // @version      0.2
-// @description  try to take over the world!
+// @description  Skrypt pokazujący solucje questów w okienku obok listy zadań.
 // @author       You
 // @match        https://*.margonem.pl/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=margonem.pl
