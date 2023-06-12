@@ -19,4 +19,4 @@ Ustawienia skryptu dostępne na początku skryptu do waszej edycji:
 # MiniQuestSolution
 Dodatek który dodaje obok okienka z zadaniami solucje do nich z tematu na forum "ABC Questów". Nie wszystkie zadania mogą działać w pełni także zgłaszajcie mi błędy i będę na bieżąco poprawiać.
 
-![Obrazek](https://i.imgur.com/cgBAnL0.png)
+![Obrazek](https://i.imgur.com/5Vk1kIP.png)
