@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         MiniQuesty
 // @namespace    http://tampermonkey.net/
-// @version      0.4
-// @description  Dodatek wyświetlający solucje questów
-// @author       Wexurro, Fadex
+// @version      0.3
+// @description  Skrypt pokazujący solucje questów w okienku obok listy zadań.
+// @author       Wexurro
 // @match        https://*.margonem.pl/
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=margonem.pl
 // @grant        none
@@ -11,83 +11,55 @@
 
 const waitForSeconds = (time) => new Promise(resolve => setTimeout(resolve, time * 1000));
 
-console.log(`%c[MQ] MiniQuesty`, 'font-weight: bold;color:#20D600;');
-const loader = (retry) => {
-    if(typeof Engine == "undefined") return console.log('%c[MQ] Wykryto stary interfejs gry! Dodatek działa tylko na nowym interfejsie!', 'color:#FF0000;');
-    if(typeof $ != "undefined") {
-        console.log('%c[MQ] Inicjowanie dodatku..', 'color:#20D600;');
-        initCSS();
-        init();
-    }else {
-        if(!retry) console.log('%c[MQ] Oczekiwanie na załadowanie jQuery..', 'color:#20D600;');
-        setTimeout(() => {
-            loader(true);
-        }, 1);
-    }
-};
-
-function initCSS() {
-    const css =
-`
-.quest-solution {
-    width: 400px;
-    height: 60vh;
-}
-.quest-solution .scroll-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: -6px;
-    width: 100%;
-}
-.quest-solution .scroll-wrapper .scrollbar-wrapper {
-    right: -8px;
-    top: -1px;
-}
-.quest-solution .scroll-wrapper .scrollbar-wrapper .background {
-    background: url(../img/gui/stats-scroll-bar.png?v=1686032121832) repeat;
-    width: 100%;
-    height: 100%;
-}
-.quest-solution .scroll-wrapper .scrollbar-wrapper .track {
-    background: 0 0;
-}
-.quest-solution .scroll-wrapper .scrollbar-wrapper .track .handle {
-    left: 0;
-}
-.quest-solution .quest-data {
-    position: relative;
-    user-select: text;
-    padding-top: 5px;
-}
-`;
-    const $style = document.createElement("style");
-    $style.innerHTML = css;
-    document.head.appendChild($style);
-    console.log('%c[MQ] Wczytano CSS!', 'color:#20D600;');
-}
-
 let quests;
+
 function init() {
-    console.log('%c[MQQH] Pobieranie questów..', 'color:#20D600;');
+    console.log("MiniQuesty");
     fetch('https://raw.githubusercontent.com/Wexurro/MargonemDodatki/main/quests.json')
         .then(response => response.text())
         .then(content => {
             const jsonObject = JSON.parse(content);
             quests = jsonObject.quests;
-            console.log('%c[MQ] Questy pobrane!', 'color:#20D600;');
+            console.log(quests);
             questListListener();
         })
         .catch(error => {
-            console.log('%c[MQ] Błąd wczytywania questów!', 'color:#FF0000;');
-            console.error('[MQ] Error log:', error);
+            console.error('Error:', error);
         });
 }
 
-/* ------------------------------ */
-
 async function questListListener() {
-    while (typeof document.getElementsByClassName("quest-log")[0] == 'undefined') await waitForSeconds(0.1);
+    console.log("Listening for quests");
+
+    while (typeof document.getElementsByClassName("quest-log")[0] == 'undefined')
+        await waitForSeconds(0.1);
+
+    let questWindowWrapper = document.createElement("div");
+    questWindowWrapper.id = 'quest-window-wrapper';
+    questWindowWrapper.name = '';
+    questWindowWrapper.style.width = "400px";
+    questWindowWrapper.style.height = "auto";
+    questWindowWrapper.style.maxHeight = '544px';
+    questWindowWrapper.style.position = "absolute";
+    questWindowWrapper.style.top = "0px";
+    questWindowWrapper.style.left = "360px";
+    questWindowWrapper.style.borderStyle = "solid";
+    questWindowWrapper.style.borderWidth = "34px 20px";
+    questWindowWrapper.style.borderImage = "url(../img/gui/window-frame.png?v=1686032121832) 34 20 fill repeat";
+    questWindowWrapper.style.backgroundSize = "100% 100%";
+    questWindowWrapper.style.overflowY = "scroll";
+    questWindowWrapper.style.overflowX = "hidden";
+    questWindowWrapper.style.opacity = "0";
+    questWindowWrapper.style.transition = 'opacity 0.3s';
+    document.getElementsByClassName("quest-log")[0].parentElement.parentElement.parentElement.appendChild(questWindowWrapper);
+
+    let questWindow = document.createElement("div");
+    questWindow.id = 'quest-window';
+    questWindow.style.padding = '10px';
+    questWindow.style.background = 'url(../img/gui/content-redleather.jpg?v=1686032121832)';
+    questWindowWrapper.appendChild(questWindow);
+
+    const divElement = document.getElementById("quest-window-wrapper").parentElement;
     const observer = new MutationObserver(callback);
 
     function callback(mutationsList, observer) {
@@ -101,35 +73,30 @@ async function questListListener() {
 
                     quests.forEach(quest => {
                         if (quest.name.includes(questName)) {
-                            let duplicatedButton = questButton.cloneNode(true);
-                            duplicatedButton.classList.add('solution');
-                            duplicatedButton.removeAttribute('tip-id');
-                            duplicatedButton.style.transform = 'rotate(90deg)';
-                            duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
-                            let questSolution = quest.name + ' ' + quest.solution;
+                            if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
+                                let duplicatedButton = questButton.cloneNode(true);
+                                duplicatedButton.classList.add('solution');
+                                duplicatedButton.removeAttribute('tip-id');
+                                duplicatedButton.style.transform = 'rotate(90deg)';
+                                duplicatedButton.style.backgroundImage = 'linear-gradient(to left, rgb(9, 59, 157), rgb(23, 116, 172))';
+                                let questSolution = quest.name + ' ' + quest.solution;
 
-                            duplicatedButton.addEventListener('click', function() {
-                                let questSolutionElement = document.createElement('div');
-                                questSolutionElement.classList.add('quest-solution');
-                                questSolutionElement.innerHTML = `
-                                    <div class="scroll-wrapper classic-bar scrollable">
-                                        <div class="scroll-pane">
-                                            <div class="quest-data">
-                                                ${questSolution}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    `;
-                                const questSolutionWindow = new Window({
-                                    name: "QUEST_SOLUTION",
-                                    header: "Solucja questa",
-                                    element: questSolutionElement
-                                });
-                                $('.quest-solution').find(".scroll-wrapper").addScrollBar({
-                                    track: 1
-                                });
-                            })
-                            activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
+                                duplicatedButton.addEventListener('click', async function() {
+                                    if (document.getElementById('quest-window-wrapper').name != questName) {
+                                        document.getElementById('quest-window-wrapper').style.display = 'block';
+                                        document.getElementById('quest-window-wrapper').name = questName;
+                                        document.getElementById('quest-window').innerHTML = questSolution;
+                                        document.getElementById('quest-window-wrapper').style.opacity = '1';
+                                    } else {
+                                        document.getElementById('quest-window-wrapper').name = '';
+                                        document.getElementById('quest-window-wrapper').style.opacity = '0';
+                                        await waitForSeconds(0.3);
+                                        document.getElementById('quest-window-wrapper').style.display = 'none';
+                                    }
+
+                                })
+                                activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].appendChild(duplicatedButton);
+                            }
                         }
                     });
                 }
@@ -137,101 +104,9 @@ async function questListListener() {
         }
     }
 
-    const questLogDiv = document.getElementsByClassName("quest-log")[0].parentElement.parentElement.parentElement;
     const config = { childList: true, subtree: true };
-    callback([{ type: 'childList', target: questLogDiv }], observer);
-    observer.observe(questLogDiv, config);
+    callback([{ type: 'childList', target: divElement }], observer);
+    observer.observe(divElement, config);
 }
 
-/* ------------------------------ */
-// Od Priweejta
-const Window = class {
-        constructor(options) {
-            this.wnd = window.Engine.windowManager.add({
-                content: " ",
-                nameWindow: options.name || " ",
-                parentObj: null,
-                title: options.header,
-                onclose: options.onclose
-            });
-            this.$ = this.wnd.$[0];
-            this.$content = document.createElement("div");
-            this.$userContent = document.createElement("div");
-            this.$content.appendChild(this.$userContent);
-
-            if (typeof options.txt != "undefined")
-                this.$userContent.innerHTML = options.txt;
-            else if (typeof options.element != "undefined")
-                this.$userContent.appendChild(options.element);
-
-            if (options.likemAlert)
-                this.$.classList.add("mAlert");
-
-            if (options.noClose) {
-                const $close = this.getCloseBtt();
-                if ($close)
-                    $close.parentElement.removeChild($close);
-            }
-
-            if (options.callbacks) {
-                for (let i=0; i<options.callbacks.length; ++i) {
-                    const data = options.callbacks[i];
-                    const btt = new addons.Button({
-                        label: data.txt,
-                        clb: data.clb
-                    });
-                    this.$content.appendChild(btt.get$());
-                }
-            }
-
-            if (options.css) {
-                Object.assign(this.$.style, options.css);
-            }
-
-            this.wnd.content(this.$content);
-            this.wnd.addToAlertLayer();
-            this.wnd.setWndOnPeak();
-            this.wnd.center();
-        }
-
-        getCloseBtt() {
-            const $close = this.$.querySelector(".close-button-corner-decor");
-            if ($close) {
-                return $close;
-            } else {
-                return null;
-            }
-        }
-
-        setContent(content) {
-            if (typeof content == "string")
-                this.$userContent.innerHTML = content;
-            else
-                this.$userContent.appendChild(content);
-        }
-
-        setHeader(header) {
-            this.wnd.title(header);
-        }
-
-        setLabel(label) {
-            this.wnd.label(label);
-        }
-
-        appendContent(el) {
-            this.$userContent.appendChild(el);
-        }
-
-        clearContent() {
-            this.$userContent.innerHTML = "";
-        }
-
-        close() {
-            this.wnd.close();
-        }
-        getInnerWnd() {
-            return this.wnd;
-        }
-}
-
-loader();
+init();
