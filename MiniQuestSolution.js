@@ -13,13 +13,13 @@ const waitForSeconds = (time) => new Promise(resolve => setTimeout(resolve, time
 
 console.log(`%c[MQ] MiniQuesty`, 'font-weight: bold;color:#20D600;');
 const loader = (retry) => {
-    if(typeof Engine == "undefined") return console.log('%c[MQ] Wykryto stary interfejs gry! Dodatek działa tylko na nowym interfejsie!', 'color:#FF0000;');
-    if(typeof $ != "undefined") {
+    if (typeof Engine == "undefined") return console.log('%c[MQ] Wykryto stary interfejs gry! Dodatek działa tylko na nowym interfejsie!', 'color:#FF0000;');
+    if (typeof $ != "undefined") {
         console.log('%c[MQ] Inicjowanie dodatku..', 'color:#20D600;');
         initCSS();
         init();
-    }else {
-        if(!retry) console.log('%c[MQ] Oczekiwanie na załadowanie jQuery..', 'color:#20D600;');
+    } else {
+        if (!retry) console.log('%c[MQ] Oczekiwanie na załadowanie jQuery..', 'color:#20D600;');
         setTimeout(() => {
             loader(true);
         }, 1);
@@ -28,7 +28,7 @@ const loader = (retry) => {
 
 function initCSS() {
     const css =
-`
+        `
 .quest-solution {
     width: 400px;
     height: 60vh;
@@ -68,6 +68,7 @@ function initCSS() {
 }
 
 let quests;
+
 function init() {
     console.log('%c[MQ] Pobieranie questów..', 'color:#20D600;');
     fetch('https://raw.githubusercontent.com/Wexurro/MargonemDodatki/main/quests.json')
@@ -113,8 +114,9 @@ async function questListListener() {
                 for (let i = 0; i < activeQuestList.length; i++) {
                     let questName = activeQuestList[i].innerText.replace('.', '');
                     let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
+
                     quests.forEach(quest => {
-                        if (quest.name.includes(questName)) {
+                        if (quest.name.toLowerCase().includes(questName.toLowerCase())) {
                             if (activeQuestList[i].parentElement.getElementsByClassName("quest-buttons-wrapper")[0].getElementsByClassName('solution').length == 0) {
                                 let duplicatedButton = questButton.cloneNode(true);
                                 duplicatedButton.classList.add('solution');
@@ -156,92 +158,92 @@ async function questListListener() {
 /* ------------------------------ */
 // Od Priweejta
 const Window = class {
-        constructor(options) {
-            this.wnd = window.Engine.windowManager.add({
-                content: " ",
-                nameWindow: options.name || " ",
-                parentObj: null,
-                title: options.header,
-                onclose: options.onclose
-            });
-            this.$ = this.wnd.$[0];
-            this.$content = document.createElement("div");
-            this.$userContent = document.createElement("div");
-            this.$content.appendChild(this.$userContent);
+    constructor(options) {
+        this.wnd = window.Engine.windowManager.add({
+            content: " ",
+            nameWindow: options.name || " ",
+            parentObj: null,
+            title: options.header,
+            onclose: options.onclose
+        });
+        this.$ = this.wnd.$[0];
+        this.$content = document.createElement("div");
+        this.$userContent = document.createElement("div");
+        this.$content.appendChild(this.$userContent);
 
-            if (typeof options.txt != "undefined")
-                this.$userContent.innerHTML = options.txt;
-            else if (typeof options.element != "undefined")
-                this.$userContent.appendChild(options.element);
+        if (typeof options.txt != "undefined")
+            this.$userContent.innerHTML = options.txt;
+        else if (typeof options.element != "undefined")
+            this.$userContent.appendChild(options.element);
 
-            if (options.likemAlert)
-                this.$.classList.add("mAlert");
+        if (options.likemAlert)
+            this.$.classList.add("mAlert");
 
-            if (options.noClose) {
-                const $close = this.getCloseBtt();
-                if ($close)
-                    $close.parentElement.removeChild($close);
-            }
-
-            if (options.callbacks) {
-                for (let i=0; i<options.callbacks.length; ++i) {
-                    const data = options.callbacks[i];
-                    const btt = new addons.Button({
-                        label: data.txt,
-                        clb: data.clb
-                    });
-                    this.$content.appendChild(btt.get$());
-                }
-            }
-
-            if (options.css) {
-                Object.assign(this.$.style, options.css);
-            }
-
-            this.wnd.content(this.$content);
-            this.wnd.addToAlertLayer();
-            this.wnd.setWndOnPeak();
-            this.wnd.center();
+        if (options.noClose) {
+            const $close = this.getCloseBtt();
+            if ($close)
+                $close.parentElement.removeChild($close);
         }
 
-        getCloseBtt() {
-            const $close = this.$.querySelector(".close-button-corner-decor");
-            if ($close) {
-                return $close;
-            } else {
-                return null;
+        if (options.callbacks) {
+            for (let i = 0; i < options.callbacks.length; ++i) {
+                const data = options.callbacks[i];
+                const btt = new addons.Button({
+                    label: data.txt,
+                    clb: data.clb
+                });
+                this.$content.appendChild(btt.get$());
             }
         }
 
-        setContent(content) {
-            if (typeof content == "string")
-                this.$userContent.innerHTML = content;
-            else
-                this.$userContent.appendChild(content);
+        if (options.css) {
+            Object.assign(this.$.style, options.css);
         }
 
-        setHeader(header) {
-            this.wnd.title(header);
-        }
+        this.wnd.content(this.$content);
+        this.wnd.addToAlertLayer();
+        this.wnd.setWndOnPeak();
+        this.wnd.center();
+    }
 
-        setLabel(label) {
-            this.wnd.label(label);
+    getCloseBtt() {
+        const $close = this.$.querySelector(".close-button-corner-decor");
+        if ($close) {
+            return $close;
+        } else {
+            return null;
         }
+    }
 
-        appendContent(el) {
-            this.$userContent.appendChild(el);
-        }
+    setContent(content) {
+        if (typeof content == "string")
+            this.$userContent.innerHTML = content;
+        else
+            this.$userContent.appendChild(content);
+    }
 
-        clearContent() {
-            this.$userContent.innerHTML = "";
-        }
+    setHeader(header) {
+        this.wnd.title(header);
+    }
 
-        close() {
-            this.wnd.close();
-        }
-        getInnerWnd() {
-            return this.wnd;
-        }
+    setLabel(label) {
+        this.wnd.label(label);
+    }
+
+    appendContent(el) {
+        this.$userContent.appendChild(el);
+    }
+
+    clearContent() {
+        this.$userContent.innerHTML = "";
+    }
+
+    close() {
+        this.wnd.close();
+    }
+    getInnerWnd() {
+        return this.wnd;
+    }
 }
 
 loader();
