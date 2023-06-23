@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Margonem AutoHeal
-// @version      1.3
+// @version      1.2
 // @description  Skrypt na nowy interfejs do automatycznego uleczania po walce https://forum.margonem.pl/?task=forum&show=posts&id=514978
 // @author       Wexurro
 // @match        https://*.margonem.pl/
@@ -21,7 +21,6 @@ let minimumLifeToHealPercent = 100; // Ustaw minimalną procentową wartość pr
 let excludedItems = ["Sok z Gumijagód", "Wytrawny chrabąszcz"]; // Tu możesz wpisać nazwy przdmiotów których nie chcesz używać
 //----------------------- KONIEC USTAWIEŃ -----------------------------------------
 
-// Zmienne wewnętrzne
 let labelHP = null;
 let labelHPDmg = null;
 let labelHPHealLeft = null;
@@ -268,6 +267,7 @@ async function initAutoHeal() {
 }
 
 async function autoHeal() {
+    await waitForSeconds(0.25);
     console.log("Zaczynam leczenie...");
 
     // Pobierz dane o punktach życia postaci
