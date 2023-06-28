@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Margonem AutoHeal
-// @version      1.2
+// @version      1.3
 // @description  Skrypt na nowy interfejs do automatycznego uleczania po walce https://forum.margonem.pl/?task=forum&show=posts&id=514978
 // @author       Wexurro
 // @match        https://*.margonem.pl/
@@ -16,13 +16,13 @@ let settingsNotUsePointHP = false; // Ustaw na 'true' żeby nie używać zwykły
 let settingsNotUseFullHP = false; // Ustaw na 'true' żeby nie używać potek z pełnym leczeniem
 let settingsNotUsePercentHP = false; // Ustaw na 'true' żeby nie używać potek z procentowym leczeniem
 let settingsShowHP = true; // Ustaw na 'false' żeby nie wyświetlał na dole ekranu ilości puntków życia oraz pozostałego leczenia
-let minimumHeal = 499; // Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
+let minimumHeal = 599; // Ustaw minimalną wartość od której skrypt będzie leczył (Przykład: 100 - pomija potki z leczeniem mniejszym niż 100 na przykład rośliny potrzebne do questów)
 let minimumLifeToHealPercent = 100; // Ustaw minimalną procentową wartość przy której skrypt zacznie działać, 80 - ulecz jak mam mniej niż 80% zdrowia, 50 - ulecz jak mam mniej niż 50% zdrowia itd.
 let excludedItems = ["Sok z Gumijagód", "Wytrawny chrabąszcz"]; // Tu możesz wpisać nazwy przdmiotów których nie chcesz używać
 //----------------------- KONIEC USTAWIEŃ -----------------------------------------
 
 let labelHP = null;
-let labelHPDmg = null;
+//let labelHPDmg = null;
 let labelHPHealLeft = null;
 let healLeft = 0;
 let lastRemainingHP = 0;
@@ -44,10 +44,9 @@ async function init() {
 
     if (settingsShowHP) {
         labelHP = createLabel("autoheal-label", Engine.hero.d.warrior_stats.hp + " HP", "100%", "-14px", "absolute", "white", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black");
-        labelHPDmg = createLabel("autoheal-dmg-label", Engine.hero.d.warrior_stats.hp + " HP", "100%", "-42px", "absolute", "bold", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black", "0", "opacity 0.5s ease-in-out");
         labelHPHealLeft = createLabel("autoheal-healleft-label", "[Not Calculated]", "100%", "-28px", "absolute", "white", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black");
         labelHPHealLeft.style.fontSize = "10px";
-        document.querySelector(".glass").parentElement.parentElement.append(labelHP, labelHPHealLeft, labelHPDmg);
+        document.querySelector(".glass").parentElement.parentElement.append(labelHP, labelHPHealLeft);
         var currentHP = Engine.hero.d.warrior_stats.hp;
         var maxHP = Engine.hero.d.warrior_stats.maxhp;
         var remainingHP = maxHP - currentHP;
@@ -56,6 +55,25 @@ async function init() {
         updateHPLabel();
         updateHealLeftLabel();
         calculateHpLeftToHeal()
+    }
+
+    const styleSheet = document.styleSheets[0];
+    const ruleName = 'fadeAndMoveUp';
+    const existingRule = Array.from(styleSheet.cssRules).find(rule => rule.name === ruleName);
+
+    if (!existingRule) {
+        const fadeAndMoveUp = `@keyframes ${ruleName} {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }`;
+
+        styleSheet.insertRule(fadeAndMoveUp, styleSheet.cssRules.length);
     }
 
     console.log("Autoheal uruchomiony");
@@ -232,13 +250,12 @@ async function showDamageGot(dmgTaken) {
         const hue = (1 - percentLost / 100) * 60;
         const color = `hsl(${hue}, 100%, 50%)`;
 
+        labelHPDmg = createLabel("autoheal-dmg-label", Engine.hero.d.warrior_stats.hp + " HP", "100%", "-42px", "absolute", "bold", "center", "none", "-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black", "0", "opacity 0.5s ease-in-out");
+        document.querySelector(".glass").parentElement.parentElement.append(labelHPDmg);
         labelHPDmg.innerText = `-${percentLost}%`;
         labelHPDmg.style.color = color;
         labelHPDmg.style.opacity = '1';
-
-        await waitForSeconds(2);
-
-        labelHPDmg.style.opacity = '0';
+        labelHPDmg.style.animation = 'fadeAndMoveUp 2s linear forwards';
     }
 }
 
@@ -249,7 +266,6 @@ async function initAutoHeal() {
     var maxHP = Engine.hero.d.warrior_stats.maxhp;
     var remainingHP = maxHP - currentHP;
     var propRemaining = remainingHP - lastRemainingHP;
-    lastRemainingHP = remainingHP;
 
     if (propRemaining < 0) {
         propRemaining = 0;
@@ -280,12 +296,14 @@ async function autoHeal() {
     // Jeżeli aktualne życie jest takie samo jak maksymalne nie ma potrzeby leczenia lub gdy nie żyjemy
     if (currentHP == maxHP || Engine.dead) {
         console.log("Życie pełne");
+        lastRemainingHP = 0;
         return;
     }
 
     // Liczymy ile HP jest do wyleczenia
     var remainingHP = maxHP - currentHP;
     console.log("Pozostało do uleczenia: " + remainingHP);
+    lastRemainingHP = remainingHP;
 
     const arrays = await getItems();
 
