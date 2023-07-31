@@ -113,7 +113,9 @@ async function questListListener() {
 
                 for (let i = 0; i < activeQuestList.length; i++) {
                     let questName = activeQuestList[i].innerText.replace('.', '');
-                    let questButton = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0].parentElement;
+                    let questButtonHide = activeQuestList[i].parentElement.getElementsByClassName("add-bck hide")[0]?.parentElement;
+                    let questButtonShow = activeQuestList[i].parentElement.getElementsByClassName("add-bck show")[0]?.parentElement;
+                    let questButton = questButtonHide !== undefined ? questButtonHide : questButtonShow;
 
                     quests.forEach(quest => {
                         if (quest.name.toLowerCase().includes(questName.toLowerCase())) {
